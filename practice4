@@ -1,0 +1,119 @@
+using Amazon.S3;
+using Amazon.S3.Model;
+using Amazon.S3.Transfer;
+using System;
+using System.Threading.Tasks;
+
+public class S3BucketOperations
+{
+    private static readonly string bucketName = "your-public-bucket-name";
+    private static readonly RegionEndpoint bucketRegion = RegionEndpoint.USEast1; // Change to your region
+    private static IAmazonS3 s3Client;
+
+    public static async Task Main()
+    {
+        s3Client = new AmazonS3Client(bucketRegion);
+
+        await CreateBucketAsync();
+        await UploadFileAsync("path/to/your/file.txt", "file.txt");
+        await UploadDirectoryAsync("path/to/your/directory");
+        await DownloadFileAsync("file.txt", "path/to/downloaded/file.txt");
+        await DownloadDirectoryAsync("s3Directory", "path/to/local/directory");
+    }
+
+    private static async Task CreateBucketAsync()
+    {
+        try
+        {
+            var putBucketRequest = new PutBucketRequest
+            {
+                BucketName = bucketName,
+                BucketRegion = S3Region.USEast1,
+                CannedACL = S3CannedACL.PublicRead
+            };
+
+            PutBucketResponse response = await s3Client.PutBucketAsync(putBucketRequest);
+            Console.WriteLine("Bucket created successfully.");
+        }
+        catch (AmazonS3Exception e)
+        {
+            Console.WriteLine("Error encountered on server. Message:'{0}' when writing an object", e.Message);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Unknown error encountered on server. Message:'{0}' when writing an object", e.Message);
+        }
+    }
+
+    private static async Task UploadFileAsync(string filePath, string keyName)
+    {
+        try
+        {
+            var fileTransferUtility = new TransferUtility(s3Client);
+            await fileTransferUtility.UploadAsync(filePath, bucketName, keyName);
+            Console.WriteLine("File uploaded successfully.");
+        }
+        catch (AmazonS3Exception e)
+        {
+            Console.WriteLine("Error encountered on server. Message:'{0}' when writing an object", e.Message);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Unknown error encountered on server. Message:'{0}' when writing an object", e.Message);
+        }
+    }
+
+    private static async Task UploadDirectoryAsync(string directoryPath)
+    {
+        try
+        {
+            var fileTransferUtility = new TransferUtility(s3Client);
+            await fileTransferUtility.UploadDirectoryAsync(directoryPath, bucketName);
+            Console.WriteLine("Directory uploaded successfully.");
+        }
+        catch (AmazonS3Exception e)
+        {
+            Console.WriteLine("Error encountered on server. Message:'{0}' when writing an object", e.Message);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Unknown error encountered on server. Message:'{0}' when writing an object", e.Message);
+        }
+    }
+
+    private static async Task DownloadFileAsync(string keyName, string filePath)
+    {
+        try
+        {
+            var fileTransferUtility = new TransferUtility(s3Client);
+            await fileTransferUtility.DownloadAsync(filePath, bucketName, keyName);
+            Console.WriteLine("File downloaded successfully.");
+        }
+        catch (AmazonS3Exception e)
+        {
+            Console.WriteLine("Error encountered on server. Message:'{0}' when writing an object", e.Message);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Unknown error encountered on server. Message:'{0}' when writing an object", e.Message);
+        }
+    }
+
+    private static async Task DownloadDirectoryAsync(string s3Directory, string localDirectory)
+    {
+        try
+        {
+            var fileTransferUtility = new TransferUtility(s3Client);
+            await fileTransferUtility.DownloadDirectoryAsync(bucketName, s3Directory, localDirectory);
+            Console.WriteLine("Directory downloaded successfully.");
+        }
+        catch (AmazonS3Exception e)
+        {
+            Console.WriteLine("Error encountered on server. Message:'{0}' when writing an object", e.Message);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Unknown error encountered on server. Message:'{0}' when writing an object", e.Message);
+        }
+    }
+}
